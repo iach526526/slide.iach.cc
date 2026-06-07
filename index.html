@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Collection - iach.cc</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .slides-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .slide-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 250px;
+        }
+
+        .slide-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide-card-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .slide-card-description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            flex-grow: 1;
+            margin-bottom: 20px;
+        }
+
+        .slide-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .slide-card-tag {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            transition: background 0.3s ease;
+        }
+
+        .slide-card:hover .cta-button {
+            background: #764ba2;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: white;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .slides-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Slide Collection</h1>
+            <p class="subtitle">iach.cc 簡報集合</p>
+        </header>
+
+        <div class="slides-grid" id="slides-container">
+            <!-- 簡報卡片會由 JavaScript 動態生成 -->
+        </div>
+
+        <footer>
+            <p>✨ 由 GitHub Pages 驅動 | Powered by Slidev</p>
+        </footer>
+    </div>
+
+    <script>
+        // 簡報資料
+        const slides = [
+            {
+                id: 'digital-knowlege',
+                title: '人工智慧與數位時代下的媒體與資訊素養',
+                description: '探討 AI 時代的媒體素養和資訊判斷能力。',
+                tag: '國文課程',
+                date: '2026 春季'
+            },
+            {
+                id: 'ubuntu-release-party-2026',
+                title: 'Ubuntu Release Party 2026',
+                description: '最新 Ubuntu 版本發佈會分享。',
+                tag: '開源',
+                date: '2026'
+            }
+        ];
+
+        const container = document.getElementById('slides-container');
+
+        if (slides.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <h2>🚀 即將推出</h2>
+                    <p>簡報正在建立中...</p>
+                </div>
+            `;
+        } else {
+            slides.forEach(slide => {
+                const card = document.createElement('a');
+                card.href = `./${slide.id}/`;
+                card.className = 'slide-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="slide-card-title">${slide.title}</div>
+                        <div class="slide-card-description">${slide.description}</div>
+                    </div>
+                    <div class="slide-card-meta">
+                        <span class="slide-card-tag">${slide.tag}</span>
+                        <span class="cta-button">查看 →</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

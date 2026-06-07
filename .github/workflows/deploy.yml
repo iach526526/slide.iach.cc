@@ -17,35 +17,40 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-strategy:
-  matrix:
-    slide:
-      - { name: digital-knowlege, repo: iach526526/digital-knowlege, path: . }
-      - { name: ubuntu-release-party-2026, repo: iach526526/ubuntu-release-party-2026, path: ubuntu-party-2026 }
+    strategy:
+      matrix:
+        slide:
+          - name: digital-knowlege
+            repo: iach526526/digital-knowlege
+            path: .
+          - name: ubuntu-release-party-2026
+            repo: iach526526/ubuntu-release-party-2026
+            path: ubuntu-party-2026
 
-steps:
-  - uses: actions/checkout@v4
-    with:
-      repository: ${{ matrix.slide.repo }}
-      path: slides/${{ matrix.slide.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.slide.repo }}
+          path: slides/${{ matrix.slide.name }}
 
-  - uses: actions/setup-node@v4
-    with:
-      node-version: 'lts/*'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
 
-  - name: Install dependencies
-    working-directory: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}
-    run: npm install
+      - name: Install dependencies
+        working-directory: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}
+        run: npm install
 
-  - name: Build ${{ matrix.slide.name }}
-    working-directory: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}
-    run: npm run build -- --base /${{ matrix.slide.name }}/
+      - name: Build ${{ matrix.slide.name }}
+        working-directory: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}
+        run: npm run build -- --base /${{ matrix.slide.name }}/
 
-  - name: Upload artifact
-    uses: actions/upload-artifact@v4
-    with:
-      name: ${{ matrix.slide.name }}-dist
-      path: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}/dist
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.slide.name }}-dist
+          path: slides/${{ matrix.slide.name }}/${{ matrix.slide.path }}/dist
 
   combine:
     needs: build
@@ -60,11 +65,14 @@ steps:
 
       - name: Combine artifacts
         run: |
-          mkdir -p dist/digital-knowlege
-          mkdir -p dist/ubuntu-release-party-2026
-          cp -r artifacts/digital-knowlege-dist/dist/* dist/digital-knowlege/ 2>/dev/null || true
-          cp -r artifacts/ubuntu-release-party-2026-dist/dist/* dist/ubuntu-release-party-2026/ 2>/dev/null || true
+          mkdir -p dist
+          for artifact in artifacts/*-dist; do
+            name=$(basename "$artifact" -dist)
+            mkdir -p "dist/$name"
+            cp -r "$artifact/dist/." "dist/$name/" 2>/dev/null || true
+          done
           cp index.html dist/
+          echo 'slide.iach.cc' > dist/CNAME
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -74,11 +82,11 @@ steps:
           path: dist
 
   deploy:
+    needs: combine
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: combine
-    runs-on: ubuntu-latest
     name: Deploy
     steps:
       - name: Deploy to GitHub Pages

@@ -1,0 +1,86 @@
+name: Deploy All Slides
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        slide:
+          - { name: digital-knowlege, repo: iach526526/digital-knowlege }
+          - { name: ubuntu-release-party-2026, repo: iach526526/ubuntu-release-party-2026 }
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.slide.repo }}
+          path: slides/${{ matrix.slide.name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        working-directory: slides/${{ matrix.slide.name }}
+        run: npm install
+
+      - name: Build ${{ matrix.slide.name }}
+        working-directory: slides/${{ matrix.slide.name }}
+        run: npm run build -- --base /${{ matrix.slide.name }}/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.slide.name }}-dist
+          path: slides/${{ matrix.slide.name }}/dist
+
+  combine:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Combine artifacts
+        run: |
+          mkdir -p dist/digital-knowlege
+          mkdir -p dist/ubuntu-release-party-2026
+          cp -r artifacts/digital-knowlege-dist/dist/* dist/digital-knowlege/ 2>/dev/null || true
+          cp -r artifacts/ubuntu-release-party-2026-dist/dist/* dist/ubuntu-release-party-2026/ 2>/dev/null || true
+          cp index.html dist/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: combine
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
